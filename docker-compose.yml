@@ -1,0 +1,9 @@
+version: '3'
+services:
+  node:
+    container_name: node
+    build: .
+    volumes:
+      - "./app:/src/app"
+    environment:
+      - token=${SLACK_BOT_TOKEN}
