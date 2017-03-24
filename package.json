@@ -3,10 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node ./app.js"
+    "start": "node app/app.js"
   },
   "dependencies": {
     "botkit": "^0.4.10",
-    "request": "^2.79.0"
+    "node-cron": "^1.1.3"
   }
 }
