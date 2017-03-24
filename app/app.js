@@ -16,27 +16,25 @@ var bot = listener.spawn({
     token: process.env.token
 }).startRTM();
 
-const config = {
-  apiKey: "AIzaSyD0BSlwscNQdUlkKkDN96nk8NUt7jIHd_M",
-  authDomain: "todos-16130.firebaseapp.com",
-  databaseURL: "https://todos-16130.firebaseio.com",
-  storageBucket: "todos-16130.appspot.com",
-  messagingSenderId: "1033025372827"
-};
+const config = process.env.firebase_config;
 const app = firebase.initializeApp(config);
 
 // start
-setupCron();
+//setupCron();
+fetchCurrentList();
 // start <end>
 
 // responding to direct messages
 listener.on('direct_message', (bot, message) => {
-  handleMessage(message);
+  handleDirectMessage(message);
 })
 
-function handleMessage(message) {
+function handleDirectMessage(message) {
   const items = processMessage(message);
   const list = generateList(items);
+  // find lastest entry in db
+  // add another item
+  // fetch full list
   sendGeneratedListForApproval(list);
 }
 
@@ -111,6 +109,7 @@ function sendInteractiveMessageAsNewConversation(list) {
 }
 
 
+// firebase
 function persistInitialListTasks(id, message) {
   const items = processMessage(message);
   items.forEach((item, index) => {
@@ -120,6 +119,14 @@ function persistInitialListTasks(id, message) {
     });
   })
 }
+
+function fetchCurrentList() {
+  var lastEntry = firebase.database().ref('lists').limitToLast(1);
+  lastEntry.on('value', (snapshot) => {
+    console.log(snapshot.val());
+  });
+}
+// firebase <end>
 
 // starting conversation
 function setupCron() {
