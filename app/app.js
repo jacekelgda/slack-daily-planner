@@ -8,8 +8,8 @@ if (!process.env.token) {
 }
 
 var listener = Botkit.slackbot({
-    debug: true,
-    stats_optout: true
+    debug: false,
+    stats_optout: false
 });
 
 var bot = listener.spawn({
@@ -26,26 +26,23 @@ const config = {
 
 const app = firebase.initializeApp(config);
 
-// start
-//setupCron();
-fetchCurrentList();
-// start <end>
+// init
+setupCron();
+// init <end>
 
 // responding to direct messages
 listener.on('direct_message', (bot, message) => {
   handleDirectMessage(message);
 })
 
-function handleDirectMessage(message) {
-  const items = processMessage(message);
-  const list = generateList(items);
-  // find lastest entry in db
-  // add another item
-  // fetch full list
-  sendGeneratedListForApproval(list);
+handleDirectMessage = (message) => {
+  getCurrentListId()
+    .then((id) => persistTasksFromMessageToList(id, message))
+    .then(fetchCurrentList)
+    .then((tasks) => sendGeneratedListForApproval(tasks));
 }
 
-function processMessage(message) {
+processMessage = (message) => {
   const itemsString = message.text;
   const items = itemsString.split(";").map((item) => {
     return item.trim();
@@ -56,15 +53,15 @@ function processMessage(message) {
 // responding to direct messages <end>
 
 // generate list
-function generateList(items) {
-  const list = items.map((item) => {
-    return '[ ] ' + item + '\n';
+generateList = (taskList) => {
+  let list = [];
+  taskList.forEach((item, index) => {
+    list[index] = '[' + (item.achieved ? 'x' : ' ') +'] ' + item.name + '\n';
   })
-
   return list;
 }
 
-function formatListToSlackText(list) {
+formatListToSlackText = (list) => {
   let listAsText = '';
   list.forEach((item, index) => {
     listAsText += item;
@@ -74,7 +71,7 @@ function formatListToSlackText(list) {
 }
 // generate list <end>
 
-function sendGeneratedListForApproval(list, convo) {
+sendGeneratedListForApproval = (list, convo) => {
   if (convo) {
     askWithInteractiveMessage(list, convo);
   } else {
@@ -82,12 +79,13 @@ function sendGeneratedListForApproval(list, convo) {
   }
 }
 
-function askWithInteractiveMessage(list, convo) {
+askWithInteractiveMessage = (list, convo) => {
+  const todoList = generateList(list);
   convo.ask({
       attachments:[
           {
               title: 'Do you want to publish this list to your journal?',
-              text: formatListToSlackText(list),
+              text: formatListToSlackText(todoList),
               callback_id: '123',
               attachment_type: 'default',
               actions: [
@@ -109,48 +107,80 @@ function askWithInteractiveMessage(list, convo) {
   });
 }
 
-function sendInteractiveMessageAsNewConversation(list) {
+sendInteractiveMessageAsNewConversation = (list) => {
   bot.startPrivateConversation({user:process.env.slack_user}, (err, convo) => {
     askWithInteractiveMessage(list, convo);
   });
 }
 
+createNewTasksList = (id, message) => {
+  return new Promise((resolve, reject) => {
+    const items = processMessage(message);
+    items.forEach((item, index) => {
+      firebase.database().ref('lists/' + id + '/tasks/' + index).set({
+        name: item,
+        achieved: false
+      });
+    });
+
+    resolve(true);
+  });
+}
 
 // firebase
-function persistInitialListTasks(id, message) {
+persistTasksFromMessageToList = (id, message) => {
   const items = processMessage(message);
-  items.forEach((item, index) => {
-    firebase.database().ref('lists/' + id + '/tasks/' + index).set({
-      name: item,
-      achieved: false
+  fetchCurrentList().then((tasks) => {
+    items.forEach((item, index) => {
+      firebase.database().ref('lists/' + id + '/tasks/' + (index + tasks.length)).set({
+        name: item,
+        achieved: false
+      });
+    });
+  });
+}
+
+getCurrentListId = () => {
+  return new Promise((resolve, reject) => {
+    const lastEntry = firebase.database().ref('lists').limitToLast(1);
+    lastEntry.on('value', (snapshot) => {
+      let listId;
+      snapshot.forEach(function(data) {
+        listId = data.key
+      });
+      resolve(listId)
     });
   })
 }
 
-function fetchCurrentList() {
-  var lastEntry = firebase.database().ref('lists').limitToLast(1);
-  lastEntry.on('value', (snapshot) => {
-    console.log(snapshot.val());
-  });
+fetchCurrentList = () => {
+  return new Promise((resolve, reject) => {
+    const lastEntry = firebase.database().ref('lists').limitToLast(1);
+    lastEntry.on('value', (snapshot) => {
+      let tasks;
+      snapshot.forEach(function(data) {
+        tasks = data.val().tasks;
+      });
+      resolve(tasks);
+    });
+  })
 }
 // firebase <end>
-
 // starting conversation
 function setupCron() {
-  privateConversation(Date.now());
   cron.schedule('* * * * *', () => {
     privateConversation(Date.now());
   });
-};
+}
 
 function privateConversation(id) {
   bot.startPrivateConversation({user:process.env.slack_user}, (err, convo) => {
     convo.ask('Whats your plan for today?', (message, convo) => {
-      console.log('updating list/' + id);
-      persistInitialListTasks(id, message);
-      convo.say('Cool, you said: ' + message.text);
+      createNewTasksList(id, message)
+        .then(fetchCurrentList)
+        .then((tasks) => sendGeneratedListForApproval(tasks));;
       convo.next();
     });
   });
-};
+}
 // starting conversation <end>
