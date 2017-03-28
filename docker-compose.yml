@@ -8,4 +8,8 @@ services:
     environment:
       - token=${SLACK_BOT_TOKEN}
       - slack_user=${SLACK_USER}
-      - firebase_config=${FIREBASE_CONFIG}
+      - firebase_config_apiKey=${FIREBASE_CONFIG_apiKey}
+      - firebase_config_authDomain=${FIREBASE_CONFIG_authDomain}
+      - firebase_config_databaseURL=${FIREBASE_CONFIG_databaseURL}
+      - firebase_config_storageBucket=${FIREBASE_CONFIG_storageBucket}
+      - firebase_config_messagingSenderId=${FIREBASE_CONFIG_messagingSenderId}

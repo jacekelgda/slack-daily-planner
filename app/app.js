@@ -16,7 +16,14 @@ var bot = listener.spawn({
     token: process.env.token
 }).startRTM();
 
-const config = process.env.firebase_config;
+const config = {
+  apiKey: process.env.firebase_config_apiKey,
+  authDomain: process.env.firebase_config_authDomain,
+  databaseURL: process.env.firebase_config_databaseURL,
+  storageBucket: process.env.firebase_config_storageBucket,
+  messagingSenderId: process.env.firebase_config_messagingSenderId
+};
+
 const app = firebase.initializeApp(config);
 
 // start
