@@ -1,5 +1,6 @@
 import Botkit from 'botkit'
 import * as formatter from '../util/formatter'
+import * as storageHandler from '../handlers/storageHandler'
 
 if (!process.env.slack_bot_token) {
     console.log('Error: Specify token in environment')
@@ -30,20 +31,20 @@ const startPrivateConversation = (id) => {
   })
 }
 
-const sendInteractiveMessageAsNewConversation = (list) => {
+const sendInteractiveMessageAsNewConversation = (list, listId) => {
   bot.startPrivateConversation(user, (err, convo) => {
-    askWithInteractiveMessage(list, convo);
+    askWithInteractiveMessage(list, listId, convo);
   })
 }
 
-const askWithInteractiveMessage = (list, convo) => {
+const askWithInteractiveMessage = (list, listId, convo) => {
   const todoList = formatter.generateList(list)
   convo.ask({
     attachments:[
       {
         title: 'Do you want to publish this list to your journal?',
         text: formatter.formatListToSlackText(todoList),
-        callback_id: '123',
+        callback_id: listId,
         attachment_type: 'default',
         actions: [
           {
@@ -64,22 +65,34 @@ const askWithInteractiveMessage = (list, convo) => {
   })
 }
 
-const sendGeneratedListForApproval = (list, convo) => {
+const sendGeneratedListForApproval = (list, listId, convo) => {
   if (convo) {
-    askWithInteractiveMessage(list, convo);
+    askWithInteractiveMessage(list, listId, convo);
   } else {
-    sendInteractiveMessageAsNewConversation(list);
+    sendInteractiveMessageAsNewConversation(list, listId);
   }
 }
 
-const sendMessageToJournal = (text) => {
+const sendMessageToJournal = (callback_id, text) => {
   bot.api.chat.postMessage({
     token: process.env.slack_api_token,
     channel: process.env.slack_test_channel,
     text: formatter.formatJournalListText(text),
     as_user: true
   }, (err,response) => {
-    console.log('api response', response)
+    storageHandler.persistJournalMessageDetails(callback_id, response.ts, response.channel)
+  })
+}
+
+const updateMessageInJournal = (ts, text, channel) => {
+  bot.api.chat.update({
+    token: process.env.slack_api_token,
+    ts: ts,
+    channel: channel,
+    text: formatter.formatJournalListText(text),
+    as_user: true
+  }, (err,response) => {
+    console.log('update message response', response)
   })
 }
 
@@ -88,5 +101,6 @@ export {
   startPrivateConversation,
   sendInteractiveMessageAsNewConversation,
   sendGeneratedListForApproval,
-  sendMessageToJournal
+  sendMessageToJournal,
+  updateMessageInJournal
 }

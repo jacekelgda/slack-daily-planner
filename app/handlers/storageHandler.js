@@ -70,10 +70,38 @@ const persistTasksFromMessageToList = (id, message) => {
   })
 }
 
+const persistJournalMessageDetails = (listId, ts, channel) => {
+  firebase.database().ref('lists/' + listId + '/meta').set({
+    channel: channel,
+    ts: ts
+  })
+}
+
+/**
+ * @return {ts, channel}
+ */
+const getListMetadata = (id) => {
+  return new Promise((resolve, reject) => {
+    const lastEntry = firebase.database().ref('lists/' + id + '/meta')
+    lastEntry.on('value', (snapshot) => {
+      if (snapshot.val()) {
+        resolve({
+          ts: snapshot.val().ts,
+          channel:snapshot.val().channel
+        })
+      } else {
+        resolve({ts: null, channel:null})
+      }
+    })
+  })
+}
+
 export {
   createNewTasksList,
   fetchList,
   fetchCurrentList,
   getCurrentListId,
-  persistTasksFromMessageToList
+  persistTasksFromMessageToList,
+  persistJournalMessageDetails,
+  getListMetadata
 }

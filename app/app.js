@@ -10,7 +10,6 @@ import express from 'express'
 
 const app = express()
 
-
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 app.use('/api', router);
@@ -20,7 +19,7 @@ chatHandler.listener.on('direct_message', async function(bot, message) {
   const updatedList = await storageHandler.persistTasksFromMessageToList(currentListId, message)
   const currentListTasks = await storageHandler.fetchCurrentList()
 
-  chatHandler.sendGeneratedListForApproval(currentListTasks)
+  chatHandler.sendGeneratedListForApproval(currentListTasks, currentListId)
 })
 
 async function startPlanningNewDay() {
@@ -36,7 +35,7 @@ async function startPlanningNewDay() {
   const newList = await storageHandler.createNewTasksList(listId, events.concat(tasks))
   const currentList = await storageHandler.fetchList(listId)
 
-  chatHandler.sendInteractiveMessageAsNewConversation(currentList)
+  chatHandler.sendInteractiveMessageAsNewConversation(currentList, listId)
 }
 
 startPlanningNewDay()
