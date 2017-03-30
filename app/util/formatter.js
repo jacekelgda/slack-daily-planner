@@ -24,8 +24,18 @@ const formatListToSlackText = (list) => {
   return listAsText;
 }
 
+const processCalendarEvents = (calendarEvents) => {
+  let events = []
+  calendarEvents.forEach((event, index) => {
+    events.push(event.summary) 
+  })
+
+  return events
+}
+
 export {
   processMessage,
   generateList,
-  formatListToSlackText
+  formatListToSlackText,
+  processCalendarEvents
 }

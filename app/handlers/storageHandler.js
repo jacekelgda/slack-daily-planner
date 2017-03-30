@@ -11,8 +11,7 @@ const config = {
 
 const app = firebase.initializeApp(config);
 
-const createNewTasksList = (id, message) => {
-  const items = messageFormatter.processMessage(message)
+const createNewTasksList = (id, items) => {
   return new Promise((resolve, reject) => {
     items.forEach((item, index) => {
       firebase.database().ref('lists/' + id + '/tasks/' + index).set({
