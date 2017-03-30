@@ -3,10 +3,26 @@ import * as storageHandler from './handlers/storageHandler'
 import * as calendarHandler from './handlers/calendarHandler'
 import * as formatter from './util/formatter'
 
+import bodyParser from 'body-parser'
+import localtunnel from 'localtunnel'
+import express from 'express'
+
+const app = express()
+import * as router from './controllers'
+
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json())
+router.use(function timeLog (req, res, next) {
+  console.log('Time: ', Date.now())
+  next()
+})
+app.use('/api', router);
+
 chatHandler.listener.on('direct_message', async function(bot, message) {
   const currentListId = await storageHandler.getCurrentListId()
   const updatedList = await storageHandler.persistTasksFromMessageToList(currentListId, message)
   const currentListTasks = await storageHandler.fetchCurrentList()
+
   chatHandler.sendGeneratedListForApproval(currentListTasks)
 })
 
@@ -22,7 +38,22 @@ async function startPlanningNewDay() {
 
   const newList = await storageHandler.createNewTasksList(listId, events.concat(tasks))
   const currentList = await storageHandler.fetchList(listId)
+
   chatHandler.sendInteractiveMessageAsNewConversation(currentList)
 }
 
 startPlanningNewDay()
+
+var port = process.env.PORT || 3000
+app.listen(port, function () {
+  console.log('Example app listening on port 3000!')
+})
+
+// localtunnel - on dev env
+const tunnel = localtunnel(port, {subdomain:"jacekelgda"}, function(err, tunnel) {
+    console.log('localtunnel url:', tunnel.url)
+});
+
+tunnel.on('close', function() {
+    console.log('tunnel is closed')
+});
