@@ -1,7 +1,7 @@
 import Botkit from 'botkit'
-import * as messageFormatter from '../util/formatter'
+import * as formatter from '../util/formatter'
 
-if (!process.env.token) {
+if (!process.env.slack_bot_token) {
     console.log('Error: Specify token in environment')
     process.exit(1)
 }
@@ -11,7 +11,7 @@ const listener = Botkit.slackbot({
 });
 
 const bot = listener.spawn({
-    token: process.env.token
+    token: process.env.slack_bot_token
 }).startRTM()
 
 const user = {user:process.env.slack_user}
@@ -33,35 +33,35 @@ const startPrivateConversation = (id) => {
 const sendInteractiveMessageAsNewConversation = (list) => {
   bot.startPrivateConversation(user, (err, convo) => {
     askWithInteractiveMessage(list, convo);
-  });
+  })
 }
 
 const askWithInteractiveMessage = (list, convo) => {
-  const todoList = messageFormatter.generateList(list);
+  const todoList = formatter.generateList(list)
   convo.ask({
     attachments:[
       {
         title: 'Do you want to publish this list to your journal?',
-        text: messageFormatter.formatListToSlackText(todoList),
+        text: formatter.formatListToSlackText(todoList),
         callback_id: '123',
         attachment_type: 'default',
         actions: [
           {
             "name":"yes",
             "text": "Yes",
-            "value": "yes",
+            "value": 1,
             "type": "button",
           },
           {
             "name":"no",
             "text": "No",
-            "value": "no",
+            "value": 0,
             "type": "button",
           }
         ]
       }
     ]
-  });
+  })
 }
 
 const sendGeneratedListForApproval = (list, convo) => {
@@ -72,9 +72,21 @@ const sendGeneratedListForApproval = (list, convo) => {
   }
 }
 
+const sendMessageToJournal = (text) => {
+  bot.api.chat.postMessage({
+    token: process.env.slack_api_token,
+    channel: process.env.slack_test_channel,
+    text: formatter.formatJournalListText(text),
+    as_user: true
+  }, (err,response) => {
+    console.log('api response', response)
+  })
+}
+
 export {
   listener,
   startPrivateConversation,
   sendInteractiveMessageAsNewConversation,
-  sendGeneratedListForApproval
+  sendGeneratedListForApproval,
+  sendMessageToJournal
 }

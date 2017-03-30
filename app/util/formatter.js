@@ -27,15 +27,20 @@ const formatListToSlackText = (list) => {
 const processCalendarEvents = (calendarEvents) => {
   let events = []
   calendarEvents.forEach((event, index) => {
-    events.push(event.summary) 
+    events.push(event.summary)
   })
 
   return events
+}
+
+const formatJournalListText = (text) => {
+  return '```Today\'s todos:\n\n' + text + '```'
 }
 
 export {
   processMessage,
   generateList,
   formatListToSlackText,
-  processCalendarEvents
+  processCalendarEvents,
+  formatJournalListText
 }

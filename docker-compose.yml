@@ -7,10 +7,12 @@ services:
       - "./app:/src/app"
     ports:
       - 80:3000
-    entrypoint: npm start
+    #entrypoint: npm start
     environment:
-      - token=${SLACK_BOT_TOKEN}
+      - slack_bot_token=${SLACK_BOT_TOKEN}
+      - slack_api_token=${SLACK_API_TOKEN}
       - slack_user=${SLACK_USER}
+      - slack_test_channel=${SLACK_TEST_CHANNEL}
       - firebase_config_apiKey=${FIREBASE_CONFIG_apiKey}
       - firebase_config_authDomain=${FIREBASE_CONFIG_authDomain}
       - firebase_config_databaseURL=${FIREBASE_CONFIG_databaseURL}
@@ -19,3 +21,4 @@ services:
       - google_api_client_id=${GOOGLE_API_CLIENT_ID}
       - google_api_client_secret=${GOOGLE_API_CLIENT_SECRET}
       - google_api_redirect_url=${GOOGLE_API_REDIRECT_URL}
+      - localtunnel_subdomain=${LOCALTUNNEL_SUBDOMAIN}

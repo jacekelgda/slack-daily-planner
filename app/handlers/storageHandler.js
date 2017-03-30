@@ -17,10 +17,10 @@ const createNewTasksList = (id, items) => {
       firebase.database().ref('lists/' + id + '/tasks/' + index).set({
         name: item,
         achieved: false
-      });
-    });
+      })
+    })
     resolve(true)
-  });
+  })
 }
 
 const fetchCurrentList = () => {
@@ -30,9 +30,9 @@ const fetchCurrentList = () => {
       let tasks
       snapshot.forEach(function(data) {
         tasks = data.val().tasks
-      });
+      })
       resolve(tasks)
-    });
+    })
   })
 }
 
@@ -41,7 +41,7 @@ const fetchList = (id) => {
     const lastEntry = firebase.database().ref('lists/' + id)
     lastEntry.on('value', (snapshot) => {
       resolve(snapshot.val().tasks)
-    });
+    })
   })
 }
 
@@ -52,9 +52,9 @@ const getCurrentListId = () => {
       let listId;
       snapshot.forEach(function(data) {
         listId = data.key
-      });
+      })
       resolve(listId)
-    });
+    })
   })
 }
 
@@ -65,9 +65,9 @@ const persistTasksFromMessageToList = (id, message) => {
       firebase.database().ref('lists/' + id + '/tasks/' + (index + tasks.length)).set({
         name: item,
         achieved: false
-      });
-    });
-  });
+      })
+    })
+  })
 }
 
 export {
