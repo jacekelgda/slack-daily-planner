@@ -2,6 +2,7 @@ import * as chatHandler from './handlers/chatHandler'
 import * as storageHandler from './handlers/storageHandler'
 import * as calendarHandler from './handlers/calendarHandler'
 import * as formatter from './util/formatter'
+import * as textInterpreter from './util/textInterpreter'
 import router from './controllers'
 
 import bodyParser from 'body-parser'
@@ -22,6 +23,13 @@ chatHandler.listener.on('direct_message', async function(bot, message) {
   chatHandler.sendGeneratedListForApproval(currentListTasks, currentListId)
 })
 
+chatHandler.listener.on('ambient', (bot, message) => {
+  const task = textInterpreter.lookForCompletedTask(message.text)
+  if (task !== null) {
+    checkDoneTask(task)
+  }
+})
+
 async function startPlanningNewDay() {
   const listId = Date.now()
 
@@ -36,6 +44,24 @@ async function startPlanningNewDay() {
   const currentList = await storageHandler.fetchList(listId)
 
   chatHandler.sendInteractiveMessageAsNewConversation(currentList, listId)
+}
+
+async function checkDoneTask(task) {
+  let currentListTasks = await storageHandler.fetchCurrentList()
+  currentListTasks.forEach(async function(item, index) {
+    if (item.name == task) {
+      const currentListId = await storageHandler.getCurrentListId()
+      item.achieved = true
+      storageHandler.markTaskAchieved(currentListId, index, item)
+      currentListTasks = await storageHandler.fetchCurrentList()
+      let list = formatter.generateList(currentListTasks)
+      list = formatter.formatListToSlackText(list)
+      let listMeta = await storageHandler.getListMetadata(currentListId)
+      if (listMeta.ts && listMeta.channel) {
+        chatHandler.updateMessageInJournal(listMeta.ts, list, listMeta.channel)
+      }
+    }
+  })
 }
 
 startPlanningNewDay()

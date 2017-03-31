@@ -96,6 +96,10 @@ const getListMetadata = (id) => {
   })
 }
 
+const markTaskAchieved = (currentListId, index, item) => {
+  firebase.database().ref('lists/' + currentListId + '/tasks/' + index).set(item)
+}
+
 export {
   createNewTasksList,
   fetchList,
@@ -103,5 +107,6 @@ export {
   getCurrentListId,
   persistTasksFromMessageToList,
   persistJournalMessageDetails,
-  getListMetadata
+  getListMetadata,
+  markTaskAchieved
 }
