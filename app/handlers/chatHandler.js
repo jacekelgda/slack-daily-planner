@@ -2,20 +2,25 @@ import Botkit from 'botkit'
 import * as formatter from '../util/formatter'
 import * as storageHandler from '../handlers/storageHandler'
 
-if (!process.env.slack_bot_token) {
-    console.log('Error: Specify token in environment')
-    process.exit(1)
-}
+let bots = []
+
 const listener = Botkit.slackbot({
-    debug: false,
-    stats_optout: false
-});
+  debug: true,
+  stats_optout: false
+})
 
-const bot = listener.spawn({
-    token: process.env.slack_bot_token
-}).startRTM()
+const createNewBotConnection = (token) => {
+  const bot = listener.spawn({ token: token.token }).startRTM()
+  bots[token.team] = bot
+}
 
-const user = {user:process.env.slack_user}
+const resumeAllConnections = (tokens) => {
+  for ( const key in tokens ) {
+    createNewBotConnection(tokens[key])
+  }
+}
+
+const user = { user: process.env.slack_user }
 
 const startPrivateConversation = (id) => {
   return new Promise((resolve, reject) => {
@@ -102,5 +107,7 @@ export {
   sendInteractiveMessageAsNewConversation,
   sendGeneratedListForApproval,
   sendMessageToJournal,
-  updateMessageInJournal
+  updateMessageInJournal,
+  resumeAllConnections,
+  bots
 }
