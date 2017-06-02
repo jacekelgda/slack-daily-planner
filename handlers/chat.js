@@ -1,6 +1,6 @@
 import Botkit from 'botkit'
 import * as formatter from '../util/formatter'
-import * as storageHandler from '../handlers/storageHandler'
+import * as storageHandler from '../handlers/store'
 
 let bots = []
 

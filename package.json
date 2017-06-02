@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "babel-node app/app.js --presets es2015"
+    "start": "babel-node app.js --presets es2015"
   },
   "dependencies": {
     "botkit": "^0.4.10",

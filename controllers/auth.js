@@ -1,5 +1,5 @@
 import express from 'express'
-import * as calendarHandler from '../handlers/calendarHandler'
+import * as calendarHandler from '../handlers/calendar'
 
 const router = new express.Router()
 

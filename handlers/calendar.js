@@ -2,7 +2,7 @@ import fs from 'fs'
 import readline from 'readline'
 import google from 'googleapis'
 import googleAuth from 'google-auth-library'
-import * as storageHandler from './storageHandler'
+import * as storageHandler from './store'
 
 const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 

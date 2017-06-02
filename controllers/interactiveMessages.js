@@ -1,6 +1,6 @@
 import express from 'express'
-import * as chatHandler from '../handlers/chatHandler'
-import * as storageHandler from '../handlers/storageHandler'
+import * as chatHandler from '../handlers/chat'
+import * as storageHandler from '../handlers/store'
 
 const router = new express.Router()
 

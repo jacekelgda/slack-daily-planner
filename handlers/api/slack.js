@@ -1,5 +1,5 @@
 import Botkit from 'botkit'
-import { bots } from '../../chatHandler'
+import { bots } from '../../chat'
 
 const identifyDevBotData = () => {
     bot.api.auth.test({}, (err, response) => {
