@@ -1,4 +1,4 @@
-import * as chatHandler from './handlers/chat'
+import * as botHandler from './handlers/bot'
 import * as storeHandler from './handlers/store'
 import * as calendarHandler from './handlers/calendar'
 import * as formatter from './util/formatter'
@@ -21,18 +21,20 @@ app.use('/api', router);
 const setupDevTeam = async function() {
   await storeHandler.init()
   await storeHandler.setupDevTeam()
+  const tokens = await storeHandler.getAllTokens()
+  botHandler.resumeAllConnections(tokens)
 }
 
 setupDevTeam()
-// chatHandler.listener.on('direct_message', async function(bot, message) {
+// botHandler.listener.on('direct_message', async function(bot, message) {
 //   const currentListId = await storageHandler.getCurrentListId()
 //   const updatedList = await storageHandler.persistTasksFromMessageToList(currentListId, message)
 //   const currentListTasks = await storageHandler.fetchCurrentList()
 //
-//   chatHandler.sendGeneratedListForApproval(currentListTasks, currentListId)
+//   botHandler.sendGeneratedListForApproval(currentListTasks, currentListId)
 // })
 //
-// chatHandler.listener.on('ambient', (bot, message) => {
+// botHandler.listener.on('ambient', (bot, message) => {
 //   const task = textInterpreter.lookForCompletedTask(message.text)
 //   if (task !== null) {
 //     checkDoneTask(task)
@@ -46,7 +48,7 @@ setupDevTeam()
 //   if (token) {
 //     const oauth2Client = await calendarHandler.authorize(token)
 //     const calendarEvents = await calendarHandler.listEvents(oauth2Client)
-//     const responseMessage = await chatHandler.startPrivateConversation(listId)
+//     const responseMessage = await botHandler.startPrivateConversation(listId)
 //
 //     const events = formatter.processCalendarEvents(calendarEvents)
 //     const tasks = formatter.processMessage(responseMessage)
@@ -54,7 +56,7 @@ setupDevTeam()
 //     const newList = await storageHandler.createNewTasksList(listId, events.concat(tasks))
 //     const currentList = await storageHandler.fetchList(listId)
 //
-//     chatHandler.sendInteractiveMessageAsNewConversation(currentList, listId)
+//     botHandler.sendInteractiveMessageAsNewConversation(currentList, listId)
 //   } else {
 //     console.log('Please authorize app')
 //   }
@@ -72,7 +74,7 @@ setupDevTeam()
 //       list = formatter.formatListToSlackText(list)
 //       let listMeta = await storageHandler.getListMetadata(currentListId)
 //       if (listMeta.ts && listMeta.channel) {
-//         chatHandler.updateMessageInJournal(listMeta.ts, list, listMeta.channel)
+//         botHandler.updateMessageInJournal(listMeta.ts, list, listMeta.channel)
 //       }
 //     }
 //   })

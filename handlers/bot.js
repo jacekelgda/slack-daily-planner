@@ -12,6 +12,8 @@ const listener = Botkit.slackbot({
 const createNewBotConnection = (token) => {
   const bot = listener.spawn({ token: token.token }).startRTM()
   bots[token.team] = bot
+
+  console.log('BOTS :', Object.keys(bots).length)
 }
 
 const resumeAllConnections = (tokens) => {

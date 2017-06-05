@@ -1,5 +1,5 @@
 import express from 'express'
-import * as chatHandler from '../handlers/chat'
+import * as botHandler from '../handlers/bot'
 import * as storageHandler from '../handlers/store'
 
 const router = new express.Router()
@@ -12,9 +12,9 @@ router.post('/im', async function (req, res) {
       const listId = payload.callback_id
       let listMeta = await storageHandler.getListMetadata(listId)
       if (listMeta.ts && listMeta.channel) {
-        chatHandler.updateMessageInJournal(listMeta.ts, originalMessageText, listMeta.channel)
+        botHandler.updateMessageInJournal(listMeta.ts, originalMessageText, listMeta.channel)
       } else {
-        chatHandler.sendMessageToJournal(listId, originalMessageText)
+        botHandler.sendMessageToJournal(listId, originalMessageText)
       }
     }
 		const message = {

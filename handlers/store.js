@@ -1,5 +1,8 @@
 import firebase from 'firebase'
 import * as messageFormatter from '../util/formatter'
+import { identifyDevBotData } from './api/slack'
+
+const TOKENS = 'tokens'
 
 const config = {
   apiKey: process.env.firebase_config_apiKey,

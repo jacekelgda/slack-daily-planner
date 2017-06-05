@@ -1,9 +1,14 @@
-import Botkit from 'botkit'
-import { bots } from '../../chat'
+import slack from 'slack-node'
 
 const identifyDevBotData = () => {
-    bot.api.auth.test({}, (err, response) => {
-      console.log(err, response)
+  return new Promise((resolve, reject) => {
+    const slackClient = new slack(process.env.slack_bot_token)
+    slackClient.api('auth.test', (err, response) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(response)
+      }
     })
   })
 }
