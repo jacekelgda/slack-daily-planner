@@ -1,19 +1,17 @@
 import Botkit from 'botkit'
 import * as formatter from '../util/formatter'
-import * as storageHandler from '../handlers/store'
+import * as storeHandler from '../handlers/store'
 
 let bots = []
 
 const listener = Botkit.slackbot({
-  debug: true,
+  debug: false,
   stats_optout: false
 })
 
 const createNewBotConnection = (token) => {
   const bot = listener.spawn({ token: token.token }).startRTM()
   bots[token.team] = bot
-
-  console.log('BOTS :', Object.keys(bots).length)
 }
 
 const resumeAllConnections = (tokens) => {
@@ -87,7 +85,7 @@ const sendMessageToJournal = (callback_id, text) => {
     text: formatter.formatJournalListText(text),
     as_user: true
   }, (err,response) => {
-    storageHandler.persistJournalMessageDetails(callback_id, response.ts, response.channel)
+    storeHandler.persistJournalMessageDetails(callback_id, response.ts, response.channel)
   })
 }
 

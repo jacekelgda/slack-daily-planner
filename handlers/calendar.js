@@ -2,7 +2,7 @@ import fs from 'fs'
 import readline from 'readline'
 import google from 'googleapis'
 import googleAuth from 'google-auth-library'
-import * as storageHandler from './store'
+import * as storeHandler from './store'
 
 const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
@@ -46,7 +46,7 @@ const exchangeCodeToToken = (code) => {
         reject(err)
       }
       oauth2Client.credentials = token
-      storageHandler.storeAuthToken(token)
+      storeHandler.storeAuthToken(token)
       resolve(oauth2Client)
     })
   })
