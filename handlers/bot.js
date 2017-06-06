@@ -34,7 +34,7 @@ const greetingsAfterInstall = (bot, userId) => {
   })
 }
 
-const startPrivateConversation = (listId) => {
+const initDailyPlan = (listId) => {
   for (const user in bots) {
     bots[user].startPrivateConversation({ user }, (err, convo) => {
 
@@ -71,7 +71,7 @@ const startPrivateConversation = (listId) => {
             default: true,
             callback: async function(message, response) {
               const tasks = formatter.processMessage(message)
-              const tasksData = await storeHandler.createNewTasksList(listId, tasks)
+              const tasksData = await storeHandler.createNewTasksList(listId, tasks, user)
               const todoListOfTasks = formatter.generateList(tasksData)
               const slackFormattedList = formatter.formatListToSlackText(todoListOfTasks)
               convo.setVar('slackFormattedList', slackFormattedList)
@@ -96,15 +96,18 @@ const startPrivateConversation = (listId) => {
 //   }
 // }
 
-const sendMessageToJournal = (callback_id, text) => {
-  bot.api.chat.postMessage({
-    token: process.env.slack_api_token,
-    channel: process.env.slack_test_channel,
-    text: formatter.formatJournalListText(text),
-    as_user: true
-  }, (err,response) => {
-    storeHandler.persistJournalMessageDetails(callback_id, response.ts, response.channel)
-  })
+
+// for now channel is set for testing. this should be changed
+// for some automated flow where user picks the channel bot posts to
+const sendMessageToJournal = (callbackId, text, userId) => {
+  bots[userId].api.chat.postMessage({
+      channel: process.env.slack_dev_test_channel,
+      text: formatter.formatJournalListText(text),
+      as_user: true
+    }, (err, response) => {
+      storeHandler.persistJournalMessageDetails(callbackId, response.ts, response.channel, userId)
+    }
+  )
 }
 
 const updateMessageInJournal = (ts, text, channel) => {
@@ -121,7 +124,7 @@ const updateMessageInJournal = (ts, text, channel) => {
 
 export {
   listener,
-  startPrivateConversation,
+  initDailyPlan,
   sendMessageToJournal,
   updateMessageInJournal,
   resumeAllConnections,

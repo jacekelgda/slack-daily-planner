@@ -5,6 +5,7 @@ import { identifyDevBotData } from './api/slack'
 const TOKENS = 'tokens'
 const TEAMS = 'teams'
 const USERS = 'users'
+const LISTS = 'lists'
 
 const config = {
   apiKey: process.env.firebase_config_apiKey,
@@ -60,7 +61,9 @@ const getAllTokens = () => {
   })
 }
 
-const createNewTasksList = (id, items) => {
+// ^^ tokens, slack auth - might need another file
+
+const createNewTasksList = (id, items, userId) => {
   return new Promise((resolve, reject) => {
     let newList = []
     items.forEach((item, index) => {
@@ -68,16 +71,16 @@ const createNewTasksList = (id, items) => {
         name: item,
         achieved: false
       }
-      firebase.database().ref('lists/' + id + '/tasks/' + index).set(data)
+      firebase.database().ref(`${LISTS}/${userId}/${id}/tasks/${index}`).set(data)
       newList.push(data)
     })
     resolve(newList)
   })
 }
 
-const fetchCurrentList = () => {
+const fetchCurrentList = (userId) => {
   return new Promise((resolve, reject) => {
-    const lastEntry = firebase.database().ref('lists').limitToLast(1)
+    const lastEntry = firebase.database().ref(`${LISTS}/${userId}`).limitToLast(1)
     lastEntry.on('value', (snapshot) => {
       let tasks
       snapshot.forEach(function(data) {
@@ -88,18 +91,18 @@ const fetchCurrentList = () => {
   })
 }
 
-const fetchList = (id) => {
+const fetchList = (id, userId) => {
   return new Promise((resolve, reject) => {
-    const lastEntry = firebase.database().ref('lists/' + id)
+    const lastEntry = firebase.database().ref(`${LISTS}/${userId}/${id}`)
     lastEntry.on('value', (snapshot) => {
       resolve(snapshot.val().tasks)
     })
   })
 }
 
-const getCurrentListId = () => {
+const getCurrentListId = (userId) => {
   return new Promise((resolve, reject) => {
-    const lastEntry = firebase.database().ref('lists').limitToLast(1)
+    const lastEntry = firebase.database().ref(`${LISTS}/${userId}`).limitToLast(1)
     lastEntry.on('value', (snapshot) => {
       let listId;
       snapshot.forEach(function(data) {
@@ -114,7 +117,8 @@ const persistTasksFromMessageToList = (id, message) => {
   const items = messageFormatter.processMessage(message);
   fetchCurrentList().then((tasks) => {
     items.forEach((item, index) => {
-      firebase.database().ref('lists/' + id + '/tasks/' + (index + tasks.length)).set({
+      const taskId = index + tasks.length
+      firebase.database().ref(`${LISTS}/${userId}/${id}/tasks/${taskId}`).set({
         name: item,
         achieved: false
       })
@@ -122,8 +126,8 @@ const persistTasksFromMessageToList = (id, message) => {
   })
 }
 
-const persistJournalMessageDetails = (listId, ts, channel) => {
-  firebase.database().ref('lists/' + listId + '/meta').set({
+const persistJournalMessageDetails = (listId, ts, channel, userId) => {
+  firebase.database().ref(`${LISTS}/${userId}/${listId}/meta`).set({
     channel: channel,
     ts: ts
   })
@@ -132,9 +136,9 @@ const persistJournalMessageDetails = (listId, ts, channel) => {
 /**
  * @return {ts, channel}
  */
-const getListMetadata = (id) => {
+const getListMetadata = (id, userId) => {
   return new Promise((resolve, reject) => {
-    const lastEntry = firebase.database().ref('lists/' + id + '/meta')
+    const lastEntry = firebase.database().ref(`${LISTS}/${userId}/${id}/meta`)
     lastEntry.on('value', (snapshot) => {
       if (snapshot.val()) {
         resolve({
@@ -148,8 +152,8 @@ const getListMetadata = (id) => {
   })
 }
 
-const markTaskAchieved = (currentListId, index, item) => {
-  firebase.database().ref('lists/' + currentListId + '/tasks/' + index).set(item)
+const markTaskAchieved = (currentListId, index, item, userId) => {
+  firebase.database().ref(`${LISTS}/${userId}/${currentListId}/tasks/${index}`).set(item)
 }
 
 const storeGCalAuthToken = (token) => {

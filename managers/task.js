@@ -21,12 +21,11 @@ const checkDoneTask = async function(task) {
   })
 }
 
-const startPlanningNewDay = async function() {
+const startPlanningNewDay = () => {
   const listId = Date.now()
-
   // const oauth2Client = await calendarHandler.authorize(token)
   // const calendarEvents = await calendarHandler.listEvents(oauth2Client)
-  const responseMessage = await botHandler.startPrivateConversation(listId)
+  botHandler.initDailyPlan(listId)
   // const events = formatter.processCalendarEvents(calendarEvents)
 
   // const currentList = await storeHandler.fetchList(listId)
