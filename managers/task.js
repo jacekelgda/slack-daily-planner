@@ -24,22 +24,13 @@ const checkDoneTask = async function(task) {
 const startPlanningNewDay = async function() {
   const listId = Date.now()
 
-  const token = await storeHandler.getAuthToken()
-  if (token) {
-    const oauth2Client = await calendarHandler.authorize(token)
-    const calendarEvents = await calendarHandler.listEvents(oauth2Client)
-    const responseMessage = await botHandler.startPrivateConversation(listId)
+  // const oauth2Client = await calendarHandler.authorize(token)
+  // const calendarEvents = await calendarHandler.listEvents(oauth2Client)
+  const responseMessage = await botHandler.startPrivateConversation(listId)
+  // const events = formatter.processCalendarEvents(calendarEvents)
 
-    const events = formatter.processCalendarEvents(calendarEvents)
-    const tasks = formatter.processMessage(responseMessage)
+  // const currentList = await storeHandler.fetchList(listId)
 
-    const newList = await storeHandler.createNewTasksList(listId, events.concat(tasks))
-    const currentList = await storeHandler.fetchList(listId)
-
-    botHandler.sendInteractiveMessageAsNewConversation(currentList, listId)
-  } else {
-    console.log('Please authorize app')
-  }
 }
 
 export {

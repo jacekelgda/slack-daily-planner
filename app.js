@@ -22,30 +22,28 @@ app.use('/', routerViews)
 const setupTeams = async function() {
   await storeHandler.init()
   await storeHandler.setupDevTeam()
+
   const tokens = await storeHandler.getAllTokens()
-
-  console.log('All tokens', tokens)
-
   botHandler.resumeAllConnections(tokens)
 
-  botHandler.listener.on('direct_message', async function(bot, message) {
-    const currentListId = await storeHandler.getCurrentListId()
-    const updatedList = await storeHandler.persistTasksFromMessageToList(currentListId, message)
-    const currentListTasks = await storeHandler.fetchCurrentList()
-
-    botHandler.sendGeneratedListForApproval(currentListTasks, currentListId)
-  })
-
-  botHandler.listener.on('ambient', (bot, message) => {
-    const task = textInterpreter.lookForCompletedTask(message.text)
-    if (task !== null) {
-      taskManager.checkDoneTask(task)
-    }
-  })
+  // botHandler.listener.on('direct_message', async function(bot, message) {
+  //   const currentListId = await storeHandler.getCurrentListId()
+  //   const updatedList = await storeHandler.persistTasksFromMessageToList(currentListId, message)
+  //   const currentListTasks = await storeHandler.fetchCurrentList()
+  //
+  //   botHandler.sendGeneratedListForApproval(currentListTasks, currentListId)
+  // })
+  //
+  // botHandler.listener.on('ambient', (bot, message) => {
+  //   const task = textInterpreter.lookForCompletedTask(message.text)
+  //   if (task !== null) {
+  //     taskManager.checkDoneTask(task)
+  //   }
+  // })
 }
 
 setupTeams()
-//cron.startJob(taskManager.startPlanningNewDay)
+cron.startJob(taskManager.startPlanningNewDay)
 
 var port = process.env.PORT || 3000
 app.listen(port, () => {

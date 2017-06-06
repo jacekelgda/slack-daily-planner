@@ -46,13 +46,13 @@ const setupDevTeam = async function() {
 
 const getAllTokens = () => {
   return new Promise((resolve, reject) => {
-    const teamsTokens = firebase.database().ref(`${TOKENS}/${USERS}`)
-      teamsTokens.once('value', (snapshot) => {
+    const usersTokens = firebase.database().ref(`${TOKENS}/${USERS}`)
+      usersTokens.once('value', (snapshot) => {
         let tokens = []
         const snaps = snapshot.val()
         for (var key in snaps) {
           if (snaps.hasOwnProperty(key)) {
-            tokens.push({ token: snaps[key].bot.botToken, team: key })
+            tokens.push({ token: snaps[key].bot.botToken, user: key })
           }
         }
         resolve(tokens)
@@ -62,13 +62,16 @@ const getAllTokens = () => {
 
 const createNewTasksList = (id, items) => {
   return new Promise((resolve, reject) => {
+    let newList = []
     items.forEach((item, index) => {
-      firebase.database().ref('lists/' + id + '/tasks/' + index).set({
+      const data = {
         name: item,
         achieved: false
-      })
+      }
+      firebase.database().ref('lists/' + id + '/tasks/' + index).set(data)
+      newList.push(data)
     })
-    resolve(true)
+    resolve(newList)
   })
 }
 
@@ -149,11 +152,11 @@ const markTaskAchieved = (currentListId, index, item) => {
   firebase.database().ref('lists/' + currentListId + '/tasks/' + index).set(item)
 }
 
-const storeAuthToken = (token) => {
+const storeGCalAuthToken = (token) => {
   firebase.database().ref('auth/').set(token)
 }
 
-const getAuthToken = () => {
+const getGCalAuthToken = () => {
   return new Promise((resolve, reject) => {
     const token = firebase.database().ref('auth')
     token.on('value', (snapshot) => {
@@ -171,8 +174,8 @@ export {
   persistJournalMessageDetails,
   getListMetadata,
   markTaskAchieved,
-  storeAuthToken,
-  getAuthToken,
+  storeGCalAuthToken,
+  getGCalAuthToken,
   storeTeamToken,
   setupDevTeam,
   getAllTokens,

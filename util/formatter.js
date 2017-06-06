@@ -1,27 +1,28 @@
 const processMessage = (message) => {
-  const itemsString = message.text;
+  console.log(message)
+  const itemsString = message.text
   const items = itemsString.split(";").map((item) => {
-    return item.trim();
-  });
+    return item.trim()
+  })
 
-  return items;
+  return items
 }
 
 const generateList = (taskList) => {
-  let list = [];
+  let list = []
   taskList.forEach((item, index) => {
-    list[index] = '[' + (item.achieved ? 'x' : ' ') +'] ' + item.name + '\n';
+    list[index] = '[' + (item.achieved ? 'x' : ' ') +'] ' + item.name + '\n'
   })
-  return list;
+  return list
 }
 
 const formatListToSlackText = (list) => {
-  let listAsText = '';
+  let listAsText = ''
   list.forEach((item, index) => {
-    listAsText += item;
-  });
+    listAsText += item
+  })
 
-  return listAsText;
+  return listAsText
 }
 
 const processCalendarEvents = (calendarEvents) => {
@@ -42,5 +43,5 @@ export {
   generateList,
   formatListToSlackText,
   processCalendarEvents,
-  formatJournalListText
+  formatJournalListText,
 }

@@ -22,12 +22,12 @@ router.post('/gcalauth', async function (req, res) {
 router.get('/auth', async function (req, res) {
   try {
     let token = await exchangeCodeForToken(req.query.code)
-    console.log('Exchanged token', token)
     storeHandler.storeUserToken(token)
-    botHandler.createNewDedicatedBotConnection({
+    const bot = botHandler.createNewDedicatedBotConnection({
       token: token.bot.bot_access_token,
       user: token.user_id
     })
+    botHandler.greetingsAfterInstall(bot, token.user_id)
     res.send('Thank you for authorizing our application')
   } catch (e) {
     res.send('Error. Invalid/expired code.')

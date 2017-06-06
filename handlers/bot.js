@@ -16,76 +16,85 @@ const createNewBotConnection = (token) => {
 
 const createNewDedicatedBotConnection = (token) => {
   const bot = listener.spawn({ token: token.token }).startRTM()
-  bot.say({
-    text: 'Hello',
-    channel: token.user
-  })
   bots[token.user] = bot
+
+  return bots[token.user]
 }
 
 const resumeAllConnections = (tokens) => {
   for ( const key in tokens ) {
-    createNewBotConnection(tokens[key])
+    createNewDedicatedBotConnection(tokens[key])
   }
 }
 
-const user = { user: process.env.slack_user }
-
-const startPrivateConversation = (id) => {
-  return new Promise((resolve, reject) => {
-    bot.startPrivateConversation(user, (err, convo) => {
-      if (err) {
-        reject(err)
-      }
-      convo.ask('Whats your plan for today? [' + id + ']', (message, convo) => {
-        resolve(message)
-        convo.next()
-      })
-    })
+const greetingsAfterInstall = (bot, userId) => {
+  bot.say({
+    text: 'Hello',
+    channel: userId
   })
 }
 
-const sendInteractiveMessageAsNewConversation = (list, listId) => {
-  bot.startPrivateConversation(user, (err, convo) => {
-    askWithInteractiveMessage(list, listId, convo);
-  })
-}
+const startPrivateConversation = (listId) => {
+  for (const user in bots) {
+    bots[user].startPrivateConversation({ user }, (err, convo) => {
 
-const askWithInteractiveMessage = (list, listId, convo) => {
-  const todoList = formatter.generateList(list)
-  convo.ask({
-    attachments:[
-      {
-        title: 'Do you want to publish this list to your journal?',
-        text: formatter.formatListToSlackText(todoList),
-        callback_id: listId,
-        attachment_type: 'default',
-        actions: [
+      convo.addMessage({
+        attachments:[
           {
-            "name":"yes",
-            "text": "Yes",
-            "value": 1,
-            "type": "button",
-          },
-          {
-            "name":"no",
-            "text": "No",
-            "value": 0,
-            "type": "button",
+            title: 'Do you want to publish this list to your journal?',
+            text: `{{vars.slackFormattedList}}`,
+            callback_id: listId,
+            attachment_type: 'default',
+            actions: [
+              {
+                name: "yes",
+                text: "Yes",
+                value: 1,
+                type: "button",
+              },
+              {
+                name: "no",
+                text: "No",
+                value: 0,
+                type: "button",
+              }
+            ]
           }
         ]
-      }
-    ]
-  })
-}
+      },
+      'present_daily_plan'
+    )
 
-const sendGeneratedListForApproval = (list, listId, convo) => {
-  if (convo) {
-    askWithInteractiveMessage(list, listId, convo);
-  } else {
-    sendInteractiveMessageAsNewConversation(list, listId);
+      convo.addQuestion('Whats your plan for today?',
+        [
+          {
+            default: true,
+            callback: async function(message, response) {
+              const tasks = formatter.processMessage(message)
+              const tasksData = await storeHandler.createNewTasksList(listId, tasks)
+              const todoListOfTasks = formatter.generateList(tasksData)
+              const slackFormattedList = formatter.formatListToSlackText(todoListOfTasks)
+              convo.setVar('slackFormattedList', slackFormattedList)
+              convo.gotoThread('present_daily_plan')
+            }
+          },
+        ],
+        {},
+        'default'
+      )
+
+      convo.activate()
+    })
   }
 }
+
+// const sendGeneratedListForApproval = (list, listId, convo) => {
+//   if (convo) {
+//     askWithInteractiveMessage(list, listId, convo)
+//   } else {
+//     sendInteractiveMessageAsNewConversation(list, listId)
+//   }
+// }
 
 const sendMessageToJournal = (callback_id, text) => {
   bot.api.chat.postMessage({
@@ -113,11 +122,10 @@ const updateMessageInJournal = (ts, text, channel) => {
 export {
   listener,
   startPrivateConversation,
-  sendInteractiveMessageAsNewConversation,
-  sendGeneratedListForApproval,
   sendMessageToJournal,
   updateMessageInJournal,
   resumeAllConnections,
   createNewDedicatedBotConnection,
-  bots
+  bots,
+  greetingsAfterInstall,
 }
