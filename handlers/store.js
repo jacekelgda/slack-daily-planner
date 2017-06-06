@@ -3,6 +3,8 @@ import * as messageFormatter from '../util/formatter'
 import { identifyDevBotData } from './api/slack'
 
 const TOKENS = 'tokens'
+const TEAMS = 'teams'
+const USERS = 'users'
 
 const config = {
   apiKey: process.env.firebase_config_apiKey,
@@ -24,7 +26,14 @@ const init = () => {
 const storeTeamToken = (token) => {
   const botData = { botToken: token.bot.bot_access_token, botUserId: token.bot.bot_user_id }
   const data = { teamId: token.team_id, bot: botData, token: token.access_token }
-  const ref = `${TOKENS}/${token.team_id}`
+  const ref = `${TOKENS}/${TEAMS}/${token.team_id}`
+  firebase.database().ref(ref).set(data)
+}
+
+const storeUserToken = (token) => {
+  const botData = { botToken: token.bot.bot_access_token, botUserId: token.bot.bot_user_id }
+  const data = { teamId: token.team_id, bot: botData, token: token.access_token }
+  const ref = `${TOKENS}/${USERS}/${token.user_id}`
   firebase.database().ref(ref).set(data)
 }
 
@@ -37,7 +46,7 @@ const setupDevTeam = async function() {
 
 const getAllTokens = () => {
   return new Promise((resolve, reject) => {
-    const teamsTokens = firebase.database().ref(TOKENS)
+    const teamsTokens = firebase.database().ref(`${TOKENS}/${USERS}`)
       teamsTokens.once('value', (snapshot) => {
         let tokens = []
         const snaps = snapshot.val()
@@ -168,4 +177,5 @@ export {
   setupDevTeam,
   getAllTokens,
   init,
+  storeUserToken,
 }

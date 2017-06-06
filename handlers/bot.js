@@ -14,6 +14,15 @@ const createNewBotConnection = (token) => {
   bots[token.team] = bot
 }
 
+const createNewDedicatedBotConnection = (token) => {
+  const bot = listener.spawn({ token: token.token }).startRTM()
+  bot.say({
+    text: 'Hello',
+    channel: token.user
+  })
+  bots[token.user] = bot
+}
+
 const resumeAllConnections = (tokens) => {
   for ( const key in tokens ) {
     createNewBotConnection(tokens[key])
@@ -109,5 +118,6 @@ export {
   sendMessageToJournal,
   updateMessageInJournal,
   resumeAllConnections,
+  createNewDedicatedBotConnection,
   bots
 }
