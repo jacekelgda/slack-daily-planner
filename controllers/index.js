@@ -1,6 +1,6 @@
 import express from 'express'
-import interactiveMessagesController from './interactiveMessagesController'
-import authController from './authController'
+import interactiveMessagesController from './interactiveMessages'
+import authController from './auth'
 
 const router = new express.Router()
 
