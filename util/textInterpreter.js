@@ -1,4 +1,4 @@
-const lookForCompletedTask = (text) => {
+export const lookForCompletedTask = (text) => {
   const re = /\[\s(.*?)\s\]/i;
   let potentialTask = null
   if (text.search(re) != -1) {
@@ -7,8 +7,4 @@ const lookForCompletedTask = (text) => {
   }
 
   return potentialTask
-}
-
-export {
-  lookForCompletedTask
 }

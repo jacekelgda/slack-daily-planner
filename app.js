@@ -4,11 +4,12 @@ import express from 'express'
 import router from './controllers'
 import routerViews from './views'
 
+import { lookForCompletedTask } from './util/textInterpreter'
+
 import * as botHandler from './handlers/bot'
 import * as storeHandler from './handlers/store'
 import * as calendarHandler from './handlers/calendar'
 import * as formatter from './util/formatter'
-import * as textInterpreter from './util/textInterpreter'
 import * as cron from './util/cron'
 import * as taskManager from './managers/task'
 
@@ -32,13 +33,13 @@ const setupTeams = async function() {
     const currentListTasks = await storeHandler.fetchCurrentList(message.user)
     botHandler.sendGeneratedListForApproval(currentListTasks, currentListId, message.user)
   })
-  //
-  // botHandler.listener.on('ambient', (bot, message) => {
-  //   const task = textInterpreter.lookForCompletedTask(message.text)
-  //   if (task !== null) {
-  //     taskManager.checkDoneTask(task)
-  //   }
-  // })
+
+  botHandler.listener.on('ambient', (bot, message) => {
+    const task = lookForCompletedTask(message.text)
+    if (task !== null) {
+      taskManager.checkDoneTask(task, message.user)
+    }
+  })
 }
 
 setupTeams()
