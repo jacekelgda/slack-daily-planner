@@ -13,7 +13,7 @@ router.post('/im', async function (req, res) {
       const listId = payload.callback_id
       let listMeta = await storeHandler.getListMetadata(listId, userId)
       if (listMeta.ts && listMeta.channel) {
-        botHandler.updateMessageInJournal(listMeta.ts, originalMessageText, listMeta.channel)
+        botHandler.updateMessageInJournal(listMeta.ts, originalMessageText, listMeta.channel, userId)
       } else {
         botHandler.sendMessageToJournal(listId, originalMessageText, userId)
       }

@@ -26,13 +26,12 @@ const setupTeams = async function() {
   const tokens = await storeHandler.getAllTokens()
   botHandler.resumeAllConnections(tokens)
 
-  // botHandler.listener.on('direct_message', async function(bot, message) {
-  //   const currentListId = await storeHandler.getCurrentListId()
-  //   const updatedList = await storeHandler.persistTasksFromMessageToList(currentListId, message)
-  //   const currentListTasks = await storeHandler.fetchCurrentList()
-  //
-  //   botHandler.sendGeneratedListForApproval(currentListTasks, currentListId)
-  // })
+  botHandler.listener.on('direct_message', async function(bot, message) {
+    const currentListId = await storeHandler.getCurrentListId(message.user)
+    await storeHandler.persistTasksFromMessageToList(currentListId, message, message.user)
+    const currentListTasks = await storeHandler.fetchCurrentList(message.user)
+    botHandler.sendGeneratedListForApproval(currentListTasks, currentListId, message.user)
+  })
   //
   // botHandler.listener.on('ambient', (bot, message) => {
   //   const task = textInterpreter.lookForCompletedTask(message.text)

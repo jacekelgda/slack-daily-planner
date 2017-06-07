@@ -113,12 +113,12 @@ const getCurrentListId = (userId) => {
   })
 }
 
-const persistTasksFromMessageToList = (id, message) => {
+const persistTasksFromMessageToList = (id, message, userId) => {
   const items = messageFormatter.processMessage(message);
-  fetchCurrentList().then((tasks) => {
+  fetchCurrentList(userId).then((tasks) => {
     items.forEach((item, index) => {
-      const taskId = index + tasks.length
-      firebase.database().ref(`${LISTS}/${userId}/${id}/tasks/${taskId}`).set({
+      const taskKey = index + tasks.length
+      firebase.database().ref(`${LISTS}/${userId}/${id}/tasks/${taskKey}`).set({
         name: item,
         achieved: false
       })

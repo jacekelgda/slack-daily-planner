@@ -88,13 +88,39 @@ const initDailyPlan = (listId) => {
   }
 }
 
-// const sendGeneratedListForApproval = (list, listId, convo) => {
-//   if (convo) {
-//     askWithInteractiveMessage(list, listId, convo)
-//   } else {
-//     sendInteractiveMessageAsNewConversation(list, listId)
-//   }
-// }
+const sendGeneratedListForApproval = (list, listId, user) => {
+  bots[user].startPrivateConversation({ user }, (err, convo) => {
+    const todoListOfTasks = formatter.generateList(list)
+    const slackFormattedList = formatter.formatListToSlackText(todoListOfTasks)
+    convo.setVar('slackFormattedList', slackFormattedList)
+    convo.addMessage({
+      attachments:[
+        {
+          title: 'Do you want to publish this list to your journal?',
+          text: `{{vars.slackFormattedList}}`,
+          callback_id: listId,
+          attachment_type: 'default',
+          actions: [
+            {
+              name: "yes",
+              text: "Yes",
+              value: 1,
+              type: "button",
+            },
+            {
+              name: "no",
+              text: "No",
+              value: 0,
+              type: "button",
+            }
+          ]
+        }
+      ]
+    },
+    'default')
+    convo.activate()
+  })
+}
 
 
 // for now channel is set for testing. this should be changed
@@ -110,9 +136,8 @@ const sendMessageToJournal = (callbackId, text, userId) => {
   )
 }
 
-const updateMessageInJournal = (ts, text, channel) => {
-  bot.api.chat.update({
-    token: process.env.slack_api_token,
+const updateMessageInJournal = (ts, text, channel, userId) => {
+  bots[userId].api.chat.update({
     ts: ts,
     channel: channel,
     text: formatter.formatJournalListText(text),
@@ -131,4 +156,5 @@ export {
   createNewDedicatedBotConnection,
   bots,
   greetingsAfterInstall,
+  sendGeneratedListForApproval,
 }
