@@ -1,5 +1,4 @@
 const processMessage = (message) => {
-  console.log(message)
   const itemsString = message.text
   const items = itemsString.split(";").map((item) => {
     return item.trim()
