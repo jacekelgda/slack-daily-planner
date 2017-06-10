@@ -1,6 +1,7 @@
 import slack from 'slack-node'
 import { handleAuthResponse } from '../../util/error'
 import { getUserToken } from '../../handlers/store'
+import { bots } from '../../handlers/bot'
 
 const identifyDevBotData = () => {
   return new Promise((resolve, reject) => {
@@ -48,8 +49,21 @@ const getListOfPrivateChannel = async (user) => {
   })
 }
 
+const inviteBotToPrivateChannel = async (user, channel) => {
+  const userToken = await getUserToken(user)
+  const bot = bots[user].identity.id
+  const slackClient = new slack(userToken.token)
+  return new Promise((resolve, reject) => {
+    const data = { channel, user: bot }
+    slackClient.api('groups.invite', data, (err, response) => {
+      resolve(response)
+    })
+  })
+}
+
 export {
   exchangeCodeForToken,
   identifyDevBotData,
-  getListOfPrivateChannel
+  getListOfPrivateChannel,
+  inviteBotToPrivateChannel,
 }
