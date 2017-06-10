@@ -1,6 +1,7 @@
 import Botkit from 'botkit'
 import * as formatter from '../util/formatter'
 import * as storeHandler from '../handlers/store'
+import { getListOfPrivateChannel } from '../handlers/api/slack'
 
 let bots = []
 
@@ -22,15 +23,88 @@ const createNewDedicatedBotConnection = (token) => {
 }
 
 const resumeAllConnections = (tokens) => {
-  for ( const key in tokens ) {
+  for (const key in tokens) {
     createNewDedicatedBotConnection(tokens[key])
   }
 }
 
-const greetingsAfterInstall = (bot, userId) => {
-  bot.say({
-    text: 'Hello',
-    channel: userId
+const greetingsAfterInstall = (bot, user) => {
+  bot.startPrivateConversation({ user }, async(err, convo) => {
+    const privateChannels = await getListOfPrivateChannel(user)
+    const options = formatter.formatChannelsToOptions(privateChannels)
+    convo.addMessage({
+      text: 'This is the list of private channels you own or you belong to.\n\nPlease select one in which Daily Planner should post your plans.',
+      response_type: 'in_channel',
+      attachments: [
+        {
+          fallback: 'Select channel of your team',
+          color: '#3AA3E3',
+          attachment_type: 'default',
+          callback_id: 'journal_channel_join',
+          actions: [
+            {
+              name: 'channels_list',
+              text: 'Pick channel',
+              type: 'select',
+              options: options
+            }
+          ]
+        }
+      ]
+    },'afterInstall_joinJournalChannel')
+
+    convo.addQuestion('Ok! What name should we give it?',
+      [
+        {
+          default: true,
+          callback: (message, response) => { console.log('Joining channel...') },
+        }
+      ], {
+        key: 'journalChannelName'
+      },
+      'afterInstall_createJournalChannel'
+    )
+
+    convo.addQuestion('Awesome! Should I create new channel or join already existing channel? `[ join / create ]`',
+      [
+        {
+          pattern: 'join',
+          callback: (message, response) => {
+            convo.gotoThread('afterInstall_joinJournalChannel')
+          },
+        },
+        {
+          pattern: 'create',
+          callback: (message, response) => {
+            convo.gotoThread('afterInstall_createJournalChannel')
+          },
+        },
+        {
+          default: true,
+          callback: (message, response) => { convo.repeat() },
+        }
+      ], {},
+      'afterInstall_channelCreateOrJoin'
+    )
+
+    convo.addQuestion('Hi, thanks for installing me!\n\nI will help you manage your daily plans and keep you motivated and productive every day.\n\nVast majority of Daily App users like to share their daily lists in private channels called `journals` where only invited team members can see their daily progress.\n\nDo you want me to post your daily plan to slack channel? `[ yes / no ]`' ,
+      [
+        {
+          pattern: bot.utterances.yes,
+          callback: (message, response) => { convo.gotoThread('afterInstall_channelCreateOrJoin') },
+        },
+        {
+          pattern: bot.utterances.no,
+          callback: (message, response) => { convo.gotoThread('bye') },
+        },
+        {
+          default: true,
+          callback: (message, response) => { convo.repeat() },
+        }
+      ], {},
+      'default'
+    )
+    convo.activate()
   })
 }
 

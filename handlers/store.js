@@ -38,6 +38,15 @@ const storeUserToken = (token) => {
   firebase.database().ref(ref).set(data)
 }
 
+const getUserToken = (user) => {
+  return new Promise((resolve, reject) => {
+    const userToken = firebase.database().ref(`${TOKENS}/${USERS}/${user}`)
+      userToken.once('value', (snapshot) => {
+        resolve(snapshot.val())
+    })
+  })
+}
+
 const setupDevTeam = async function() {
   let devBotData = await identifyDevBotData()
   const botData = { bot_access_token: process.env.slack_bot_token, bot_user_id: devBotData.user_id}
@@ -185,4 +194,5 @@ export {
   getAllTokens,
   init,
   storeUserToken,
+  getUserToken,
 }
