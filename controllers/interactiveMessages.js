@@ -7,13 +7,13 @@ const router = new express.Router()
 const DROPDOWN_TYPE = 'select'
 
 router.post('/im', async function (req, res) {
-  console.log(req.body)
 	if (req.body.payload) {
 		const payload = JSON.parse(req.body.payload)
     if ((payload.actions[0].type == DROPDOWN_TYPE)) {
       const selectdChannelId = payload.actions[0].selected_options[0].value
       const userId = payload.user.id
       inviteBotToPrivateChannel(userId, selectdChannelId)
+      storeHandler.storeJournalChannel(userId, selectdChannelId)
     } else {
       const originalMessageText = payload.original_message.attachments[0].text
       const userId = payload.user.id

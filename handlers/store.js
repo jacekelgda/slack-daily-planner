@@ -6,6 +6,7 @@ const TOKENS = 'tokens'
 const TEAMS = 'teams'
 const USERS = 'users'
 const LISTS = 'lists'
+const CHANNELS = 'channels'
 
 const config = {
   apiKey: process.env.firebase_config_apiKey,
@@ -13,7 +14,7 @@ const config = {
   databaseURL: process.env.firebase_config_databaseURL,
   storageBucket: process.env.firebase_config_storageBucket,
   messagingSenderId: process.env.firebase_config_messagingSenderId
-};
+}
 
 const init = () => {
   try {
@@ -178,6 +179,20 @@ const getGCalAuthToken = () => {
   })
 }
 
+const storeJournalChannel = (userId, channelId) => {
+  const data = { userId, channelId }
+  firebase.database().ref(`${CHANNELS}/${userId}/`).set(data)
+}
+
+const getUsersJournalChannelId = (userId) => {
+  return new Promise((resolve, reject) => {
+    const response = firebase.database().ref(`${CHANNELS}/${userId}`)
+      response.once('value', (snapshot) => {
+        resolve(snapshot.val().channelId)
+    })
+  })
+}
+
 export {
   createNewTasksList,
   fetchList,
@@ -195,4 +210,6 @@ export {
   init,
   storeUserToken,
   getUserToken,
+  storeJournalChannel,
+  getUsersJournalChannelId,
 }

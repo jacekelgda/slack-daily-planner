@@ -197,11 +197,11 @@ const sendGeneratedListForApproval = (list, listId, user) => {
 }
 
 
-// for now channel is set for testing. this should be changed
-// for some automated flow where user picks the channel bot posts to
-const sendMessageToJournal = (callbackId, text, userId) => {
+
+const sendMessageToJournal = async (callbackId, text, userId) => {
+  const channel = await storeHandler.getUsersJournalChannelId(userId)
   bots[userId].api.chat.postMessage({
-      channel: process.env.slack_dev_test_channel,
+      channel,
       text: formatter.formatJournalListText(text),
       as_user: true
     }, (err, response) => {
