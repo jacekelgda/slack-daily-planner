@@ -188,7 +188,9 @@ const getUsersJournalChannelId = (userId) => {
   return new Promise((resolve, reject) => {
     const response = firebase.database().ref(`${CHANNELS}/${userId}`)
       response.once('value', (snapshot) => {
-        resolve(snapshot.val().channelId)
+        if (snapshot.val()) {
+          resolve(snapshot.val().channelId)
+        }
     })
   })
 }

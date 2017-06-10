@@ -108,57 +108,58 @@ const greetingsAfterInstall = (bot, user) => {
   })
 }
 
-const initDailyPlan = (listId) => {
+const initDailyPlan = async (listId) => {
   for (const user in bots) {
-    bots[user].startPrivateConversation({ user }, (err, convo) => {
-
-      convo.addMessage({
-        attachments:[
-          {
-            title: 'Do you want to publish this list to your journal?',
-            text: `{{vars.slackFormattedList}}`,
-            callback_id: listId,
-            attachment_type: 'default',
-            actions: [
-              {
-                name: "yes",
-                text: "Yes",
-                value: 1,
-                type: "button",
-              },
-              {
-                name: "no",
-                text: "No",
-                value: 0,
-                type: "button",
-              }
-            ]
-          }
-        ]
-      },
-      'present_daily_plan'
-    )
-
-      convo.addQuestion('Whats your plan for today?',
-        [
-          {
-            default: true,
-            callback: async function(message, response) {
-              const tasks = formatter.processMessage(message)
-              const tasksData = await storeHandler.createNewTasksList(listId, tasks, user)
-              const todoListOfTasks = formatter.generateList(tasksData)
-              const slackFormattedList = formatter.formatListToSlackText(todoListOfTasks)
-              convo.setVar('slackFormattedList', slackFormattedList)
-              convo.gotoThread('present_daily_plan')
+    if (await storeHandler.getUsersJournalChannelId(user)) {
+      bots[user].startPrivateConversation({ user }, (err, convo) => {
+        convo.addMessage({
+          attachments:[
+            {
+              title: 'Do you want to publish this list to your journal?',
+              text: `{{vars.slackFormattedList}}`,
+              callback_id: listId,
+              attachment_type: 'default',
+              actions: [
+                {
+                  name: "yes",
+                  text: "Yes",
+                  value: 1,
+                  type: "button",
+                },
+                {
+                  name: "no",
+                  text: "No",
+                  value: 0,
+                  type: "button",
+                }
+              ]
             }
-          },
-        ],
-        {},
-        'default'
+          ]
+        },
+        'present_daily_plan'
       )
 
-      convo.activate()
-    })
+        convo.addQuestion('Whats your plan for today?',
+          [
+            {
+              default: true,
+              callback: async function(message, response) {
+                const tasks = formatter.processMessage(message)
+                const tasksData = await storeHandler.createNewTasksList(listId, tasks, user)
+                const todoListOfTasks = formatter.generateList(tasksData)
+                const slackFormattedList = formatter.formatListToSlackText(todoListOfTasks)
+                convo.setVar('slackFormattedList', slackFormattedList)
+                convo.gotoThread('present_daily_plan')
+              }
+            },
+          ],
+          {},
+          'default'
+        )
+
+        convo.activate()
+      })
+    }
   }
 }
 
