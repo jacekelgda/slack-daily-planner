@@ -37,10 +37,20 @@ const formatJournalListText = (text) => {
   return '```Today\'s todos:\n\n' + text + '```'
 }
 
+const formatChannelsToOptions = (channels) => {
+  let options = []
+  channels.forEach((channel) => {
+    options.push({text: channel.name, value: channel.id})
+  })
+
+  return options
+}
+
 export {
   processMessage,
   generateList,
   formatListToSlackText,
   processCalendarEvents,
   formatJournalListText,
+  formatChannelsToOptions,
 }

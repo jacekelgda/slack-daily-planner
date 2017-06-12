@@ -1,6 +1,11 @@
 import Botkit from 'botkit'
 import * as formatter from '../util/formatter'
 import * as storeHandler from '../handlers/store'
+import {
+  getListOfPrivateChannel,
+  createPrivateChannel,
+  inviteBotToPrivateChannel
+} from '../handlers/api/slack'
 
 let bots = []
 
@@ -22,69 +27,151 @@ const createNewDedicatedBotConnection = (token) => {
 }
 
 const resumeAllConnections = (tokens) => {
-  for ( const key in tokens ) {
+  for (const key in tokens) {
     createNewDedicatedBotConnection(tokens[key])
   }
 }
 
-const greetingsAfterInstall = (bot, userId) => {
-  bot.say({
-    text: 'Hello',
-    channel: userId
+const greetingsAfterInstall = (bot, user) => {
+  bot.startPrivateConversation({ user }, async(err, convo) => {
+    const privateChannels = await getListOfPrivateChannel(user)
+    const options = formatter.formatChannelsToOptions(privateChannels)
+
+    convo.addMessage('Bye!','afterInstall_end')
+
+    convo.addMessage({
+      text: 'This is the list of private channels you own or you belong to.\n\nPlease select one in which Daily Planner should post your plans.',
+      response_type: 'in_channel',
+      attachments: [
+        {
+          fallback: 'Select channel of your team',
+          color: '#3AA3E3',
+          attachment_type: 'default',
+          callback_id: 'journal_channel_join',
+          actions: [
+            {
+              name: 'channels_list',
+              text: 'Pick channel',
+              type: 'select',
+              options: options
+            }
+          ]
+        }
+      ]
+    },'afterInstall_joinJournalChannel')
+
+    convo.addQuestion('Ok! What name should we give it?',
+      [
+        {
+          default: true,
+          callback: async (message, response) => {
+            const privateChannelResponse = await createPrivateChannel(message.user, message.text)
+            const userId = message.user
+            const channelId = privateChannelResponse.group.id
+            await inviteBotToPrivateChannel(userId, channelId)
+            storeHandler.storeJournalChannel(userId, channelId)
+            convo.gotoThread('afterInstall_end')
+          },
+        }
+      ], {},
+      'afterInstall_createJournalChannel'
+    )
+
+    convo.addQuestion('Awesome! Should I create new channel or join already existing channel? `[ join / create ]`',
+      [
+        {
+          pattern: 'join',
+          callback: (message, response) => {
+            convo.gotoThread('afterInstall_joinJournalChannel')
+          },
+        },
+        {
+          pattern: 'create',
+          callback: (message, response) => {
+            convo.gotoThread('afterInstall_createJournalChannel')
+          },
+        },
+        {
+          default: true,
+          callback: (message, response) => { convo.repeat() },
+        }
+      ], {},
+      'afterInstall_channelCreateOrJoin'
+    )
+
+    convo.addQuestion('Hi, thanks for installing me!\n\nI will help you manage your daily plans and keep you motivated and productive every day.\n\nVast majority of Daily App users like to share their daily lists in private channels called `journals` where only invited team members can see their daily progress.\n\nDo you want me to post your daily plan to slack channel? `[ yes / no ]`' ,
+      [
+        {
+          pattern: bot.utterances.yes,
+          callback: (message, response) => { convo.gotoThread('afterInstall_channelCreateOrJoin') },
+        },
+        {
+          pattern: bot.utterances.no,
+          callback: (message, response) => { convo.gotoThread('bye') },
+        },
+        {
+          default: true,
+          callback: (message, response) => { convo.repeat() },
+        }
+      ], {},
+      'default'
+    )
+    convo.activate()
   })
 }
 
-const initDailyPlan = (listId) => {
+const initDailyPlan = async (listId) => {
   for (const user in bots) {
-    bots[user].startPrivateConversation({ user }, (err, convo) => {
-
-      convo.addMessage({
-        attachments:[
-          {
-            title: 'Do you want to publish this list to your journal?',
-            text: `{{vars.slackFormattedList}}`,
-            callback_id: listId,
-            attachment_type: 'default',
-            actions: [
-              {
-                name: "yes",
-                text: "Yes",
-                value: 1,
-                type: "button",
-              },
-              {
-                name: "no",
-                text: "No",
-                value: 0,
-                type: "button",
-              }
-            ]
-          }
-        ]
-      },
-      'present_daily_plan'
-    )
-
-      convo.addQuestion('Whats your plan for today?',
-        [
-          {
-            default: true,
-            callback: async function(message, response) {
-              const tasks = formatter.processMessage(message)
-              const tasksData = await storeHandler.createNewTasksList(listId, tasks, user)
-              const todoListOfTasks = formatter.generateList(tasksData)
-              const slackFormattedList = formatter.formatListToSlackText(todoListOfTasks)
-              convo.setVar('slackFormattedList', slackFormattedList)
-              convo.gotoThread('present_daily_plan')
+    if (await storeHandler.getUsersJournalChannelId(user)) {
+      bots[user].startPrivateConversation({ user }, (err, convo) => {
+        convo.addMessage({
+          attachments:[
+            {
+              title: 'Do you want to publish this list to your journal?',
+              text: `{{vars.slackFormattedList}}`,
+              callback_id: listId,
+              attachment_type: 'default',
+              actions: [
+                {
+                  name: "yes",
+                  text: "Yes",
+                  value: 1,
+                  type: "button",
+                },
+                {
+                  name: "no",
+                  text: "No",
+                  value: 0,
+                  type: "button",
+                }
+              ]
             }
-          },
-        ],
-        {},
-        'default'
+          ]
+        },
+        'present_daily_plan'
       )
 
-      convo.activate()
-    })
+        convo.addQuestion('Whats your plan for today?',
+          [
+            {
+              default: true,
+              callback: async function(message, response) {
+                const tasks = formatter.processMessage(message)
+                const tasksData = await storeHandler.createNewTasksList(listId, tasks, user)
+                const todoListOfTasks = formatter.generateList(tasksData)
+                const slackFormattedList = formatter.formatListToSlackText(todoListOfTasks)
+                convo.setVar('slackFormattedList', slackFormattedList)
+                convo.gotoThread('present_daily_plan')
+              }
+            },
+          ],
+          {},
+          'default'
+        )
+
+        convo.activate()
+      })
+    }
   }
 }
 
@@ -123,11 +210,11 @@ const sendGeneratedListForApproval = (list, listId, user) => {
 }
 
 
-// for now channel is set for testing. this should be changed
-// for some automated flow where user picks the channel bot posts to
-const sendMessageToJournal = (callbackId, text, userId) => {
+
+const sendMessageToJournal = async (callbackId, text, userId) => {
+  const channel = await storeHandler.getUsersJournalChannelId(userId)
   bots[userId].api.chat.postMessage({
-      channel: process.env.slack_dev_test_channel,
+      channel,
       text: formatter.formatJournalListText(text),
       as_user: true
     }, (err, response) => {

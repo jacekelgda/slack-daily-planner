@@ -6,6 +6,7 @@ const TOKENS = 'tokens'
 const TEAMS = 'teams'
 const USERS = 'users'
 const LISTS = 'lists'
+const CHANNELS = 'channels'
 
 const config = {
   apiKey: process.env.firebase_config_apiKey,
@@ -13,7 +14,7 @@ const config = {
   databaseURL: process.env.firebase_config_databaseURL,
   storageBucket: process.env.firebase_config_storageBucket,
   messagingSenderId: process.env.firebase_config_messagingSenderId
-};
+}
 
 const init = () => {
   try {
@@ -36,6 +37,15 @@ const storeUserToken = (token) => {
   const data = { teamId: token.team_id, bot: botData, token: token.access_token }
   const ref = `${TOKENS}/${USERS}/${token.user_id}`
   firebase.database().ref(ref).set(data)
+}
+
+const getUserToken = (user) => {
+  return new Promise((resolve, reject) => {
+    const userToken = firebase.database().ref(`${TOKENS}/${USERS}/${user}`)
+      userToken.once('value', (snapshot) => {
+        resolve(snapshot.val())
+    })
+  })
 }
 
 const setupDevTeam = async function() {
@@ -169,6 +179,22 @@ const getGCalAuthToken = () => {
   })
 }
 
+const storeJournalChannel = (userId, channelId) => {
+  const data = { userId, channelId }
+  firebase.database().ref(`${CHANNELS}/${userId}/`).set(data)
+}
+
+const getUsersJournalChannelId = (userId) => {
+  return new Promise((resolve, reject) => {
+    const response = firebase.database().ref(`${CHANNELS}/${userId}`)
+      response.once('value', (snapshot) => {
+        if (snapshot.val()) {
+          resolve(snapshot.val().channelId)
+        }
+    })
+  })
+}
+
 export {
   createNewTasksList,
   fetchList,
@@ -185,4 +211,7 @@ export {
   getAllTokens,
   init,
   storeUserToken,
+  getUserToken,
+  storeJournalChannel,
+  getUsersJournalChannelId,
 }
