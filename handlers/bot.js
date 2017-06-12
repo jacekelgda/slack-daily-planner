@@ -1,7 +1,11 @@
 import Botkit from 'botkit'
 import * as formatter from '../util/formatter'
 import * as storeHandler from '../handlers/store'
-import { getListOfPrivateChannel } from '../handlers/api/slack'
+import {
+  getListOfPrivateChannel,
+  createPrivateChannel,
+  inviteBotToPrivateChannel
+} from '../handlers/api/slack'
 
 let bots = []
 
@@ -32,6 +36,9 @@ const greetingsAfterInstall = (bot, user) => {
   bot.startPrivateConversation({ user }, async(err, convo) => {
     const privateChannels = await getListOfPrivateChannel(user)
     const options = formatter.formatChannelsToOptions(privateChannels)
+
+    convo.addMessage('Bye!','afterInstall_end')
+
     convo.addMessage({
       text: 'This is the list of private channels you own or you belong to.\n\nPlease select one in which Daily Planner should post your plans.',
       response_type: 'in_channel',
@@ -57,11 +64,16 @@ const greetingsAfterInstall = (bot, user) => {
       [
         {
           default: true,
-          callback: (message, response) => { console.log('Joining channel...') },
+          callback: async (message, response) => {
+            const privateChannelResponse = await createPrivateChannel(message.user, message.text)
+            const userId = message.user
+            const channelId = privateChannelResponse.group.id
+            await inviteBotToPrivateChannel(userId, channelId)
+            storeHandler.storeJournalChannel(userId, channelId)
+            convo.gotoThread('afterInstall_end')
+          },
         }
-      ], {
-        key: 'journalChannelName'
-      },
+      ], {},
       'afterInstall_createJournalChannel'
     )
 

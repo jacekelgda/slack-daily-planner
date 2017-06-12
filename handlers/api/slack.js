@@ -61,9 +61,20 @@ const inviteBotToPrivateChannel = async (user, channel) => {
   })
 }
 
+const createPrivateChannel = async (user, name) => {
+  const userToken = await getUserToken(user)
+  const slackClient = new slack(userToken.token)
+  return new Promise((resolve, reject) => {
+    slackClient.api('groups.create', { name }, (err, response) => {
+      resolve(response)
+    })
+  })
+}
+
 export {
   exchangeCodeForToken,
   identifyDevBotData,
   getListOfPrivateChannel,
   inviteBotToPrivateChannel,
+  createPrivateChannel,
 }
