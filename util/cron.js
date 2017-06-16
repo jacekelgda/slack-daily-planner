@@ -1,9 +1,19 @@
 import cron from 'node-cron'
+import { startPlanningNewDay, finishDay } from '../managers/task'
 
-const startJob = (job) => {
-  cron.schedule(process.env.cron_interval, () => {
-    job()
+const startPlanningNewDayJob = () => {
+  cron.schedule(process.env.start_day_interval, () => {
+    startPlanningNewDay()
   })
 }
 
-export { startJob }
+const startFinishDayJob = () => {
+  cron.schedule(process.env.finish_day_interval, () => {
+    finishDay()
+  })
+}
+
+export {
+  startPlanningNewDayJob,
+  startFinishDayJob
+}

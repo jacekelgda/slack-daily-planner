@@ -101,6 +101,21 @@ const fetchCurrentList = (userId) => {
   })
 }
 
+const fetchCurrentListUnachieved = (userId) => {
+  return new Promise((resolve, reject) => {
+    fetchCurrentList(userId).then((currentListTasks) => {
+      let unachievedTasks = [];
+      currentListTasks.forEach((task) => {
+        if (task.achieved !== true) {
+          unachievedTasks.push(task)
+        }
+      })
+
+      resolve(unachievedTasks)
+    })
+  })
+}
+
 const fetchList = (id, userId) => {
   return new Promise((resolve, reject) => {
     const lastEntry = firebase.database().ref(`${LISTS}/${userId}/${id}`)
@@ -199,6 +214,7 @@ export {
   createNewTasksList,
   fetchList,
   fetchCurrentList,
+  fetchCurrentListUnachieved,
   getCurrentListId,
   persistTasksFromMessageToList,
   persistJournalMessageDetails,

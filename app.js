@@ -43,7 +43,8 @@ const setupTeams = async function() {
 }
 
 setupTeams()
-cron.startJob(taskManager.startPlanningNewDay)
+cron.startPlanningNewDayJob()
+cron.startFinishDayJob()
 
 var port = process.env.PORT || 3000
 app.listen(port, () => {

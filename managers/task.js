@@ -32,7 +32,13 @@ const startPlanningNewDay = () => {
 
 }
 
+const finishDay = () => {
+  const listId = Date.now()
+  botHandler.initDailySumUp(listId)
+}
+
 export {
   checkDoneTask,
   startPlanningNewDay,
+  finishDay,
 }
