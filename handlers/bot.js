@@ -120,6 +120,45 @@ const greetingsAfterInstall = (bot, user) => {
   })
 }
 
+const initDailySumUp = async (listId) => {
+  for (const user in bots) {
+    let unachievedTasks = await awaistoreHandler.fetchCurrentListUnachieved()
+    if (unachievedTasks.length) {
+      bots[user].startPrivateConversation({ user }, (err, convo) => {
+        const slackFormattedList = formatter.formatListToSlackText(unachievedTasks)
+        convo.setVar('slackFormattedList', slackFormattedList)
+        convo.addMessage({
+          attachments:[
+            {
+              title: 'You have some unachieved tasks from Today, would you like me to postpone them to tomorrow?',
+              text: `{{vars.slackFormattedList}}`,
+              callback_id: listId,
+              attachment_type: 'default',
+              actions: [
+                {
+                  name: "yes",
+                  text: "Yes",
+                  value: 1,
+                  type: "button",
+                },
+                {
+                  name: "no",
+                  text: "No",
+                  value: 0,
+                  type: "button",
+                }
+              ]
+            }
+          ]
+        },
+        'ask_postpone_tasks')
+
+        convo.activate()
+      })
+    }
+  }
+}
+
 const initDailyPlan = async (listId) => {
   for (const user in bots) {
     if (await storeHandler.getUsersJournalChannelId(user)) {
